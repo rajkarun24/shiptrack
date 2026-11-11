@@ -1,0 +1,43 @@
+# One file that describes the whole local environment: api + database + cache.
+services:
+  api:
+    build: .                      # build the image from our Dockerfile
+    ports:
+      - "8000:8000"               # your laptop's port 8000 -> container's port 8000
+    environment:
+      APP_ENV: local
+      API_KEY: ${API_KEY:?Set API_KEY in .env}
+      # "db" and "redis" are service names; Compose gives them DNS names on a private network
+      DATABASE_URL: postgresql://shiptrack:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/shiptrack
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy      # wait until Postgres is really ready
+      redis:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: shiptrack
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: shiptrack
+    volumes:
+      - pgdata:/var/lib/postgresql/data   # keeps data when the container is removed
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shiptrack -d shiptrack"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    # No "ports:" on purpose: only the api container can reach the database
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:

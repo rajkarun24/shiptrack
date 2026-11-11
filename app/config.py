@@ -7,9 +7,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     app_env: str = "local"        # local / dev / staging / prod
     log_level: str = "INFO"
-    api_key: str                  # SECRET: no default on purpose, app won't start without it
+    api_key: str                  # SECRET: no default on purpose
+    database_url: str             # contains a password, so treat it as a secret
+    redis_url: str                # e.g. redis://redis:6379/0
+    cache_ttl_seconds: int = 60
 
-    # Reads a local .env file if present; real environment variables win.
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
