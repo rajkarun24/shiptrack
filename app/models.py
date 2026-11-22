@@ -24,3 +24,10 @@ class StatusUpdate(BaseModel):
 class Parcel(ParcelCreate):
     id: str
     status: Status = Status.CREATED
+
+
+class StatusEvent(BaseModel):
+    """The message that travels through Kafka: 'parcel X changed to status Y'."""
+    event_id: str
+    parcel_id: str
+    status: Status
